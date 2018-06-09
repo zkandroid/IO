@@ -2,10 +2,9 @@ package Nio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
+
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectableChannel;
+
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -31,9 +30,6 @@ public class MultipServer implements Runnable {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-			if(sChannel !=null)
-				sChannel.close();
-			sChannel=null;
 		}
 	}
 	public void stop() {
@@ -92,7 +88,8 @@ public class MultipServer implements Runnable {
 					readBuffer.get(bytes);
 					String body = new String(bytes, "UTF-8");
 					System.out.println("recevive order: "+body);
-					doWrite(sc,"i do kwon");
+					String cString ="i do kwon";
+					doWrite(sc,cString);
 				}else if (readBytes<0) {
 					key.cancel();
 					sc.close();
@@ -104,17 +101,15 @@ public class MultipServer implements Runnable {
 		
 	}
 	private void doWrite(SocketChannel sc, String rsp) throws IOException {
-		if(rsp ==null || "".equals(rsp)) {
-			System.out.println("no somthing send");
-			return;
-		}
-		byte [] bytes = rsp.getBytes();
-		ByteBuffer writeBuffer = ByteBuffer.allocate(bytes.length);
-		writeBuffer.put(bytes);
-		writeBuffer.flip();
-		sc.write(writeBuffer);
-		if(!writeBuffer.hasRemaining())
+		if(rsp !=null && rsp.trim().length()>0) {
+			byte [] bytes = rsp.getBytes();
+			ByteBuffer writeBuffer = ByteBuffer.allocate(bytes.length);
+			writeBuffer.put(bytes);
+			writeBuffer.flip();
+			sc.write(writeBuffer);
 			System.out.println("Send 2 client ");
+		}
+		
 		
 	}
 

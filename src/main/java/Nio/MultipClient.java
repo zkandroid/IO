@@ -16,7 +16,7 @@ public class MultipClient implements Runnable {
 	private int port;
 	private Selector selector;
 	private SocketChannel socketChannel;
-	private volatile boolean stop;
+	private volatile boolean stop ;
 	
 	public MultipClient(String host,int port) {
 		this.host=host;
@@ -38,7 +38,7 @@ public class MultipClient implements Runnable {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		while (!stop) {
+		while (true) {
 			try {
 				selector.select(1000);
 				Set<SelectionKey> selectionKeys = selector.selectedKeys();
@@ -53,8 +53,7 @@ public class MultipClient implements Runnable {
 						if(key !=null) {
 							key.cancel();
 							if(key.channel() !=null) 
-								key.channel().close();
-							
+								key.channel().close();							
 						}
 					}
 				}
@@ -65,34 +64,30 @@ public class MultipClient implements Runnable {
 			
 		}
 		//如果多路复用器没有关闭，则关闭
-		if(selector !=null) 
+		/*if(selector !=null) 
 			try {
 				selector.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				
-			}
+			}*/
 
 	}
 
 	private void handleInput(SelectionKey key) throws IOException {
 		
-		if(!key.isValid()) {
-			//如果连接不成功
-			System.out.println(" no key.isValid");
-			return;
-		}
-		SocketChannel sc = (SocketChannel) key.channel();
-		if(key.isConnectable()) {
-			System.out.println("---");
-			if(sc.finishConnect()) {
-				sc.register(selector, SelectionKey.OP_READ);
-				doWrite(sc);
-			}else {
-				return;
-			}
+		if(key.isValid()) {
+			SocketChannel sc = (SocketChannel) key.channel();
+			if(key.isConnectable()) {
+			//System.out.println("---");
+				if(sc.finishConnect()) {
+					sc.register(selector, SelectionKey.OP_READ);
+					doWrite(sc);
+				}else 
+					return;
+				}
 			if(key.isReadable()) {
+				System.out.println("rrrrr");
 				//读数据
 				ByteBuffer readBuffer =ByteBuffer.allocate(1024);
 				int readBytes = sc.read(readBuffer);
@@ -101,7 +96,7 @@ public class MultipClient implements Runnable {
 					byte [] bytes = new byte[readBuffer.remaining()];
 					readBuffer.get(bytes);
 					String body = new String(bytes, "UTF-8");
-					System.out.println("client recevive order: "+body);
+					System.out.println("now is: "+body);
 					this.stop=true;
 				}else if (readBytes<0) {
 					key.cancel();
@@ -111,6 +106,7 @@ public class MultipClient implements Runnable {
 				
 			}
 		}
+		//}
 		
 	}
 
